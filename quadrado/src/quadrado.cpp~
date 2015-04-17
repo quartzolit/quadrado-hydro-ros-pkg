@@ -1,0 +1,44 @@
+
+
+
+
+
+geometry_msgs::Twist setVelocity (double x, double phi)
+{
+	geometry_msgs::Twist msg;
+	msg.linear.x=x;
+	msg.angular.z=phi;
+
+	return msg;
+}
+
+
+void odometryCallback(const nav_msgs::OdometryConstPtr& msg)
+{
+	curr_x_ = msg->pose.pose.position.x;
+	curr_y_ = msg->pose.pose.position.y;
+	curr_phi_ = tf::getYaw(msg->pose.pose.orientation);
+
+	if (!odom_setted_)
+	{
+		ROS_INFO("Odometry initialized!!!");
+		odom_setted_ = true;
+		prev_phi_ = curr_phi_;
+	}
+
+	disp_x_ = (curr_x_ - start_x_) * cos(-start_phi_) - (curr_y_ - start_y_) * sin(-start_phi_);
+	disp_y_ = (curr_y_ - start_y_) * cos(-start_phi_) + (curr_x_ - start_x_) * sin(-start_phi_);
+
+	while (curr_phi_ - prev_phi_ < PI)
+	{
+		curr_phi_ += 2 * PI;
+	}
+
+	while (curr_phi_ - prev_phi_ > PI)
+	{
+		curr_phi_ -= 2 * PI;
+	}
+
+	disp_phi_ += curr_phi_ - prev_phi_;
+	prev_phi_ = curr_phi_;
+}
